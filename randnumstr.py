@@ -24,7 +24,7 @@ def gen_rand_string(length):
                    for i in xrange(length))
 
 def randnumstr_parallel(num=1000000):
-    pool = mp.Pool(processes=mp.cpu_count())
+    pool = mp.Pool(processes=mp.cpu_count()+2)
     nums = pool.map(random.random, ())
     strs = pool.map(gen_rand_string, (5,)*num)
     ret = zip(nums, strs)
@@ -48,9 +48,5 @@ def f(x):
     return x*x
 
 if __name__ == '__main__':
-##    pool = mp.Pool(processes=mp.cpu_count())
-##    result = pool.apply_async(f, [10])    # evaluate "f(10)" asynchronously
-##    print result.get(timeout=1)           # prints "100" unless your computer is *very* slow
-##    print pool.map(f, range(10))          # prints "[0, 1, 4,..., 81]"
     print "Regular:", timeit.timeit(randnumstr_reg, number=1)
     print "Parallel:", timeit.timeit(randnumstr_parallel, number=1)
