@@ -1,7 +1,9 @@
 import multiprocessing as mp
+import logging, sys
 import random
 import string
 import timeit
+from functools import partial
 
 import platform
 def print_sysinfo():
@@ -23,11 +25,37 @@ def gen_rand_string(length):
                     + string.digits)
                    for i in xrange(length))
 
-# Uses pools for parallel processing.
+def rand_str_worker(q, length, num):
+    for n in xrange(num):
+        q.put(gen_rand_string(length))
+
+def rand_num_worker(q, num):
+    for n in xrange(num):
+        q.put(random.random())
+
+# Uses processes for parallel processing.
 def randnumstr_parallel(num=1000000):
-    pool = mp.Pool(processes=mp.cpu_count()+2)
-    nums = pool.map(random.random, ())
-    strs = pool.map(gen_rand_string, (5,)*num)
+    qnums = mp.Queue()
+    pnums = mp.Process(target=rand_str_worker, args=(qnums,5,num))
+    pnums.start()
+    
+    qstrs = mp.Queue()
+    pstrs = mp.Process(target=rand_num_worker, args=(qstrs,num))
+    pstrs.start()
+    
+    pnums.join()
+    pstrs.join()
+
+    nums = []
+    while not qnums.empty():
+        nums.append(qnums.get())
+    qnums.close()
+    
+    strs = []
+    while not qstrs.empty():
+        strs.append(qstrs.get())
+    qstrs.close()
+    
     ret = zip(nums, strs)
     ret.sort()
     return ret
@@ -43,8 +71,9 @@ def randnumstr_reg(num=1000000):
         strs.append(gen_rand_string(5))
     ret = zip(nums, strs)
     ret.sort()
-    return ret
+    return
 
-if __name__ == '__main__':
-    print "Regular:", timeit.timeit(randnumstr_reg, number=1)
-    print "Parallel:", timeit.timeit(randnumstr_parallel, number=1)
+if __name__ == "__main__":
+    mp.log_to_stderr(logging.DEBUG)
+    ret = randnumstr_parallel(600) # times out after 600
+    # Hypothesis: queue probably gets too full.

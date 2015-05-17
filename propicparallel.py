@@ -56,10 +56,10 @@ def parseParallel(propic, width=20, height=20):
     return arr
 
 def reg():
-    return parseProfilePicture("propic.jpg")
+    return parseProfilePicture("propic.jpg", 50, 50)
 
 def parallel():
-    return parseParallel("propic.jpg")
+    return parseParallel("propic.jpg", 50, 50)
 
 if __name__ == "__main__":
     print "Regular:", timeit.timeit(reg, number=1)
